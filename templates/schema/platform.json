@@ -83,7 +83,7 @@
                         }
                     },
                     {
-                        "title": "qq-botpy 适配器",
+                        "title": "qq-botpy 适配器（WebSocket）",
                         "description": "用于接入 QQ 官方机器人 API",
                         "properties": {
                             "adapter": {
@@ -119,6 +119,47 @@
                                     "direct_message",
                                     "public_messages"
                                 ]
+                            }
+                        }
+                    },
+                    {
+                        "title": "QQ 官方适配器（WebHook）",
+                        "description": "用于接入 QQ 官方机器人 API",
+                        "properties": {
+                            "adapter": {
+                                "type": "string",
+                                "const": "qqofficial"
+                            },
+                            "enable": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否启用此适配器",
+                                "layout": {
+                                    "comp": "switch",
+                                    "props": {
+                                        "color": "primary"
+                                    }
+                                }
+                            },
+                            "appid": {
+                                "type": "string",
+                                "default": "",
+                                "description": "申请到的QQ官方机器人的appid"
+                            },
+                            "secret": {
+                                "type": "string",
+                                "default": "",
+                                "description": "申请到的QQ官方机器人的secret"
+                            },
+                            "port": {
+                                "type": "integer",
+                                "default": 2284,
+                                "description": "监听的端口"
+                            },
+                            "token": {
+                                "type": "string",
+                                "default": "",
+                                "description": "申请到的QQ官方机器人的token"
                             }
                         }
                     },
@@ -242,6 +283,97 @@
                                 "type": "string",
                                 "default": "",
                                 "description": "Discord 的 token"
+                            }
+                        }
+                    },
+                    {
+                        "title": "gewechat 适配器",
+                        "description": "用于接入个人微信",
+                        "properties": {
+                            "adapter": {
+                                "type": "string",
+                                "const": "gewechat"
+                            },
+                            "enable": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否启用此适配器",
+                                "layout": {
+                                    "comp": "switch",
+                                    "props": {
+                                        "color": "primary"
+                                    }
+                                }
+                            },
+                            "gewechat_url": {
+                                "type": "string",
+                                "default": "",
+                                "description": "gewechat 的 url"
+                            },
+                            "port": {
+                                "type": "integer",
+                                "default": 2286,
+                                "description": "gewechat 的端口"
+                            },
+                            "callback_url": {
+                                "type": "string",
+                                "default": "",
+                                "description": "回调地址（LangBot主机相对于gewechat服务器的地址）"
+                            },
+                            "app_id": {
+                                "type": "string",
+                                "default": "",
+                                "description": "gewechat 的 app_id"
+                            },
+                            "token": {
+                                "type": "string",
+                                "default": "",
+                                "description": "gewechat 的 token"
+                            }
+                        }
+                    },
+                    {
+                        "title": "微信公众号适配器",
+                        "description": "用于接入微信公众号",
+                        "properties": {
+                            "adapter": {
+                                "type": "string",
+                                "const": "officialaccount"
+                            },
+                            "enable": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否启用此适配器"
+                            },
+                            "token": {
+                                "type": "string",
+                                "default": "",
+                                "description": "微信公众号的token"
+                            },
+                            "EncodingAESKey": {
+                                "type": "string",
+                                "default": "",
+                                "description": "微信公众号的EncodingAESKey"
+                            },
+                            "AppID": {
+                                "type": "string",
+                                "default": "",
+                                "description": "微信公众号的AppID"
+                            },
+                            "AppSecret": {
+                                "type": "string",
+                                "default": "",
+                                "description": "微信公众号的AppSecret"
+                            },
+                            "host": {
+                                "type": "string",
+                                "default": "0.0.0.0",
+                                "description": "监听的IP地址"
+                            },
+                            "port": {
+                                "type": "integer",
+                                "default": 2287,
+                                "description": "监听的端口"
                             }
                         }
                     }

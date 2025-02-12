@@ -29,17 +29,6 @@ class WecomMessageConverter(adapter.MessageConverter):
     ):
         content_list = []
 
-        [
-            {
-                "type": "text",
-                "content": "text",
-            },
-            {
-                "type": "image",
-                "media_id": "media_id",
-            }
-        ]
-
         for msg in message_chain:
             if type(msg) is platform_message.Plain:
                 content_list.append({
@@ -83,7 +72,7 @@ class WecomMessageConverter(adapter.MessageConverter):
         image_base64, image_format = await image.get_wecom_image_base64(pic_url=picurl)
         yiri_msg_list.append(platform_message.Image(base64=f"data:image/{image_format};base64,{image_base64}"))
         chain = platform_message.MessageChain(yiri_msg_list)
-
+        
         return chain
 
 
@@ -130,9 +119,8 @@ class WecomEventConverter:
             yiri_chain = await WecomMessageConverter.target2yiri(
                 event.message, event.message_id
             )
-
             friend = platform_entities.Friend(
-                id=event.user_id,
+                id=f"u{event.user_id}",
                 nickname=str(event.agent_id),
                 remark="",
             )
@@ -165,7 +153,6 @@ class WecomeAdapter(adapter.MessageSourceAdapter):
     message_converter: WecomMessageConverter = WecomMessageConverter()
     event_converter: WecomEventConverter = WecomEventConverter()
     config: dict
-    ap: app.Application
 
     def __init__(self, config: dict, ap: app.Application):
         self.config = config
@@ -202,13 +189,15 @@ class WecomeAdapter(adapter.MessageSourceAdapter):
             message_source, self.bot_account_id, self.bot
         )
         content_list = await WecomMessageConverter.yiri2target(message, self.bot)
-
+        fixed_user_id = Wecom_event.user_id
+        # 删掉开头的u
+        fixed_user_id = fixed_user_id[1:]
         for content in content_list:
             if content["type"] == "text":
-                await self.bot.send_private_msg(Wecom_event.user_id, Wecom_event.agent_id, content["content"])
+                await self.bot.send_private_msg(fixed_user_id, Wecom_event.agent_id, content["content"])
             elif content["type"] == "image":
-                await self.bot.send_image(Wecom_event.user_id, Wecom_event.agent_id, content["media_id"])
-
+                await self.bot.send_image(fixed_user_id, Wecom_event.agent_id, content["media_id"])
+  
     async def send_message(
         self, target_type: str, target_id: str, message: platform_message.MessageChain
     ):
