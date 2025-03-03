@@ -3,7 +3,9 @@ from __future__ import annotations
 import typing
 import json
 import uuid
+import re
 import base64
+import datetime
 
 import aiohttp
 
@@ -41,6 +43,23 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             base_url=self.ap.provider_cfg.data["dify-service-api"]["base-url"],
         )
 
+    def _try_convert_thinking(self, resp_text: str) -> str:
+        """尝试转换 Dify 的思考提示"""
+        if not resp_text.startswith("<details style=\"color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;\" open> <summary> Thinking... </summary>"):
+            return resp_text
+
+        if self.ap.provider_cfg.data["dify-service-api"]["options"]["convert-thinking-tips"] == "original":
+            return resp_text
+        
+        if self.ap.provider_cfg.data["dify-service-api"]["options"]["convert-thinking-tips"] == "remove":
+            return re.sub(r'<details style="color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;" open> <summary> Thinking... </summary>.*?</details>', '', resp_text, flags=re.DOTALL)
+        
+        if self.ap.provider_cfg.data["dify-service-api"]["options"]["convert-thinking-tips"] == "plain":
+            pattern = r'<details style="color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;" open> <summary> Thinking... </summary>(.*?)</details>'
+            thinking_text = re.search(pattern, resp_text, flags=re.DOTALL)
+            content_text = re.sub(pattern, '', resp_text, flags=re.DOTALL)
+            return f"<think>{thinking_text.group(1)}</think>\n{content_text}"
+
     async def _preprocess_user_message(
         self, query: core_entities.Query
     ) -> tuple[str, list[str]]:
@@ -51,6 +70,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         """
         plain_text = ""
         image_ids = []
+
         if isinstance(query.user_message.content, list):
             for ce in query.user_message.content:
                 if ce.type == "text":
@@ -109,7 +129,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                     if chunk['data']['node_type'] == 'answer':
                         yield llm_entities.Message(
                             role="assistant",
-                            content=chunk['data']['outputs']['answer'],
+                            content=self._try_convert_thinking(chunk['data']['outputs']['answer']),
                         )
             elif mode == "basic":
                 if chunk['event'] == 'message':
@@ -117,7 +137,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 elif chunk['event'] == 'message_end':
                     yield llm_entities.Message(
                         role="assistant",
-                        content=basic_mode_pending_chunk,
+                        content=self._try_convert_thinking(basic_mode_pending_chunk),
                     )
                     basic_mode_pending_chunk = ''
 
@@ -212,6 +232,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
         plain_text, image_ids = await self._preprocess_user_message(query)
 
+        # 尝试获取 CreateTime
+        create_time = int(query.message_event.time) if query.message_event.time else int(datetime.datetime.now().timestamp())
+
         files = [
             {
                 "type": "image",
@@ -228,6 +251,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 "langbot_user_message_text": plain_text,
                 "langbot_session_id": f"{query.session.launcher_type.value}_{query.session.launcher_id}",
                 "langbot_conversation_id": cov_id,
+                "langbot_msg_create_time": create_time,
             },
             user=f"{query.session.launcher_type.value}_{query.session.launcher_id}",
             files=files,

@@ -28,6 +28,9 @@
         ],
         "bailian": [
             "sk-xxxxxxx"
+        ],
+        "volcark": [
+            "xxxxxxxx"
         ]
     },
     "requester": {
@@ -87,6 +90,11 @@
             "args": {},
             "base-url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
             "timeout": 120
+        },
+        "volcark-chat-completions": {
+            "args": {},
+            "base-url": "https://ark.cn-beijing.volces.com/api/v3",
+            "timeout": 120
         }
     },
     "model": "gpt-4o",
@@ -98,6 +106,9 @@
     "dify-service-api": {
         "base-url": "https://api.dify.ai/v1",
         "app-type": "chat",
+        "options": {
+            "convert-thinking-tips": "plain"
+        },
         "chat": {
             "api-key": "app-1234567890",
             "timeout": 120

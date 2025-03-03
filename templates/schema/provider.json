@@ -90,6 +90,14 @@
                         "type": "string"
                     },
                     "default": []
+                },
+                "volcark": {
+                    "type": "array",
+                    "title": "火山引擎大模型平台 API 密钥",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
                 }
             }
         },
@@ -316,6 +324,26 @@
                             "default": 120
                         }
                     }
+                },
+                "volcark-chat-completions": {
+                    "type": "object",
+                    "title": "火山方舟大模型平台 API 请求配置",
+                    "description": "仅可编辑 URL 和 超时时间，额外请求参数不支持可视化编辑，请到编辑器编辑",
+                    "properties": {
+                        "base-url": {
+                            "type": "string",
+                            "title": "API URL"
+                        },
+                        "args": {
+                            "type": "object",
+                            "default": {}
+                        },
+                        "timeout": {
+                            "type": "number",
+                            "title": "API 请求超时时间",
+                            "default": 120
+                        }
+                    }
                 }
             }
         },
@@ -376,6 +404,20 @@
                     "enum": ["chat", "workflow", "agent"],
                     "default": "chat"
                 },
+                "options": {
+                    "type": "object",
+                    "title": "Dify Service API 配置选项",
+                    "properties": {
+                        "convert-thinking-tips": {
+                            "type": "string",
+                            "title": "转换思考提示",
+                            "description": "设置转换思考提示。值为 original 时，不转换思考提示；值为 plain 时，将思考提示转换为类似 DeepSeek 官方的<think>...</think>格式；值为 remove 时，删除思考提示",
+                            "enum": ["original", "plain", "remove"],
+                            "default": "plain"
+                        }
+                    }
+                },
+                
                 "chat": {
                     "type": "object",
                     "title": "聊天助手 API 参数",

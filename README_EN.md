@@ -34,7 +34,7 @@
 
 ## ✨ Features
 
-- 💬 Chat with LLM / Agent: Supports multiple LLMs, adapt to group chats and private chats; Supports multi-round conversations, tool calls, and multi-modal capabilities. Deeply integrates with [Dify](https://dify.ai). Currently supports QQ, QQ Channel, WeCom, Lark, Discord, personal WeChat, and will support WhatsApp, Telegram, etc. in the future.
+- 💬 Chat with LLM / Agent: Supports multiple LLMs, adapt to group chats and private chats; Supports multi-round conversations, tool calls, and multi-modal capabilities. Deeply integrates with [Dify](https://dify.ai). Currently supports QQ, QQ Channel, WeCom, personal WeChat, Lark, DingTalk, Discord, Telegram, etc.
 - 🛠️ High Stability, Feature-rich: Native access control, rate limiting, sensitive word filtering, etc. mechanisms; Easy to use, supports multiple deployment methods.
 - 🧩 Plugin Extension, Active Community: Support event-driven, component extension, etc. plugin mechanisms; Rich ecology, currently has dozens of [plugins](https://docs.langbot.app/plugin/plugin-intro.html)
 - 😻 [New] Web UI: Support management LangBot instance through the browser, for details, see [documentation](https://docs.langbot.app/webui/intro.html)
@@ -85,13 +85,12 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 | Personal QQ | ✅ |  |
 | QQ Official API | ✅ |  |
 | WeCom | ✅ |  |
-| WeChat Official Account | ✅ |  |
-| Lark | ✅ |  |
-| Discord | ✅ |  |
 | Personal WeChat | ✅ | Use [Gewechat](https://github.com/Devo919/Gewechat) to access |
-| Telegram | 🚧 |  |
+| Lark | ✅ |  |
+| DingTalk | ✅ |  |
+| Discord | ✅ |  |
+| Telegram | ✅ |  |
 | WhatsApp | 🚧 |  |
-| DingTalk | 🚧 |  |
 
 🚧: In development
 
@@ -111,6 +110,7 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 | [GiteeAI](https://ai.gitee.com/) | ✅ | LLM interface gateway(MaaS) |
 | [SiliconFlow](https://siliconflow.cn/) | ✅ | LLM gateway(MaaS) |
 | [Aliyun Bailian](https://bailian.console.aliyun.com/) | ✅ | LLM gateway(MaaS), LLMOps platform |
+| [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | LLM gateway(MaaS), LLMOps platform |
 
 ## 🤝 Community Contribution
 

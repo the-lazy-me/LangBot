@@ -33,7 +33,7 @@
 
 ## ✨ 機能
 
-- 💬 LLM / エージェントとのチャット: 複数のLLMをサポートし、グループチャットとプライベートチャットに対応。マルチラウンドの会話、ツールの呼び出し、マルチモーダル機能をサポート。 [Dify](https://dify.ai) と深く統合。現在、QQ、QQチャンネル、WeCom、Lark、Discord、個人WeChatをサポートし、将来的にはWhatsApp、Telegramなどもサポート予定。
+- 💬 LLM / エージェントとのチャット: 複数のLLMをサポートし、グループチャットとプライベートチャットに対応。マルチラウンドの会話、ツールの呼び出し、マルチモーダル機能をサポート。 [Dify](https://dify.ai) と深く統合。現在、QQ、QQ チャンネル、WeChat、個人 WeChat、Lark、DingTalk、Discord、Telegram など、複数のプラットフォームをサポートしています。
 - 🛠️ 高い安定性、豊富な機能: ネイティブのアクセス制御、レート制限、敏感な単語のフィルタリングなどのメカニズムをサポート。使いやすく、複数のデプロイ方法をサポート。
 - 🧩 プラグイン拡張、活発なコミュニティ: イベント駆動、コンポーネント拡張などのプラグインメカニズムをサポート。豊富なエコシステム、現在数十の[プラグイン](https://docs.langbot.app/plugin/plugin-intro.html)が存在。
 - 😻 [新機能] Web UI: ブラウザを通じてLangBotインスタンスを管理することをサポート。詳細は[ドキュメント](https://docs.langbot.app/webui/intro.html)を参照。
@@ -84,12 +84,12 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 | 個人QQ | ✅ |  |
 | QQ公式API | ✅ |  |
 | WeCom | ✅ |  |
-| Lark | ✅ |  |
-| Discord | ✅ |  |
 | 個人WeChat | ✅ | [Gewechat](https://github.com/Devo919/Gewechat)を使用して接続 |
-| Telegram | 🚧 |  |
+| Lark | ✅ |  |
+| DingTalk | ✅ |  |
+| Discord | ✅ |  |
+| Telegram | ✅ |  |
 | WhatsApp | 🚧 |  |
-| DingTalk | 🚧 |  |
 
 🚧: 開発中
 
@@ -109,6 +109,7 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 | [GiteeAI](https://ai.gitee.com/) | ✅ | LLMインターフェースゲートウェイ(MaaS) |
 | [SiliconFlow](https://siliconflow.cn/) | ✅ | LLMゲートウェイ(MaaS) |
 | [Aliyun Bailian](https://bailian.console.aliyun.com/) | ✅ | LLMゲートウェイ(MaaS), LLMOpsプラットフォーム |
+| [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | LLMゲートウェイ(MaaS), LLMOpsプラットフォーム |
 
 ## 🤝 コミュニティ貢献
 

@@ -6,7 +6,7 @@ import time
 import datetime
 import aiocqhttp
 import aiohttp
-from pkg.platform.adapter import MessageSourceAdapter
+from pkg.platform.adapter import MessagePlatformAdapter
 from pkg.platform.types import events as platform_events, message as platform_message
 from pkg.core import app
 from .. import adapter
@@ -74,7 +74,11 @@ class QQOfficialEventConverter(adapter.EventConverter):
                 remark = "",
             )
             return platform_events.FriendMessage(
-                sender = friend,message_chain = yiri_chain,time = event.timestamp,
+                sender = friend,message_chain = yiri_chain,time = int(
+                    datetime.datetime.strptime(
+                        event.timestamp, "%Y-%m-%dT%H:%M:%S%z"
+                    ).timestamp()
+                ),
                 source_platform_object=event
             )
         
@@ -105,7 +109,11 @@ class QQOfficialEventConverter(adapter.EventConverter):
                 last_speak_timestamp=0,
                 mute_time_remaining=0
             )
-            time = event.timestamp
+            time = int(
+                    datetime.datetime.strptime(
+                        event.timestamp, "%Y-%m-%dT%H:%M:%S%z"
+                    ).timestamp()
+                )
             return platform_events.GroupMessage(
                 sender = sender,
                 message_chain=yiri_chain,
@@ -128,7 +136,11 @@ class QQOfficialEventConverter(adapter.EventConverter):
                 last_speak_timestamp=0,
                 mute_time_remaining=0
             )
-            time = event.timestamp,
+            time = int(
+                    datetime.datetime.strptime(
+                        event.timestamp, "%Y-%m-%dT%H:%M:%S%z"
+                    ).timestamp()
+                ),
             return platform_events.GroupMessage(
                 sender  =sender,
                 message_chain = yiri_chain,
@@ -137,10 +149,7 @@ class QQOfficialEventConverter(adapter.EventConverter):
             )
 
 
-        
-
-@adapter.adapter_class("qqofficial")
-class QQOfficialAdapter(adapter.MessageSourceAdapter):
+class QQOfficialAdapter(adapter.MessagePlatformAdapter):
     bot:QQOfficialClient
     ap:app.Application
     config:dict
@@ -213,7 +222,7 @@ class QQOfficialAdapter(adapter.MessageSourceAdapter):
         self,
         event_type: typing.Type[platform_events.Event],
         callback: typing.Callable[
-            [platform_events.Event, adapter.MessageSourceAdapter], None
+            [platform_events.Event, adapter.MessagePlatformAdapter], None
         ],
     ):
         async def on_message(event:QQOfficialEvent):
@@ -250,7 +259,7 @@ class QQOfficialAdapter(adapter.MessageSourceAdapter):
     def unregister_listener(
         self,
         event_type: type,
-        callback: typing.Callable[[platform_events.Event, MessageSourceAdapter], None],
+        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
     ):
         return super().unregister_listener(event_type, callback)
 

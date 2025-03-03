@@ -25,9 +25,11 @@ from ..utils import version as version_mgr, proxy as proxy_mgr, announce as anno
 from ..persistence import mgr as persistencemgr
 from ..api.http.controller import main as http_controller
 from ..api.http.service import user as user_service
+from ..discover import engine as discover_engine
 from ..utils import logcache, ip
 from . import taskmgr
 from . import entities as core_entities
+from .bootutils import config
 
 
 class Application:
@@ -37,6 +39,8 @@ class Application:
 
     # asyncio_tasks: list[asyncio.Task] = []
     task_mgr: taskmgr.AsyncTaskManager = None
+
+    discover: discover_engine.ComponentDiscoveryEngine = None
 
     platform_mgr: im_mgr.PlatformManager = None
 
@@ -200,6 +204,8 @@ class Application:
             case core_entities.LifecycleControlScope.PROVIDER.value:
                 self.logger.info("执行热重载 scope="+scope)
 
+                latest_llm_model_config = await config.load_json_config("data/metadata/llm-models.json", "templates/metadata/llm-models.json")
+                self.llm_models_meta = latest_llm_model_config
                 llm_model_mgr_inst = llm_model_mgr.ModelManager(self)
                 await llm_model_mgr_inst.initialize()
                 self.model_mgr = llm_model_mgr_inst

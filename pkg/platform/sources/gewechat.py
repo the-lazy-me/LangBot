@@ -28,7 +28,10 @@ from ...utils import image
 
 
 class GewechatMessageConverter(adapter.MessageConverter):
-    
+
+    def __init__(self, config: dict):
+        self.config = config
+
     @staticmethod
     async def yiri2target(
         message_chain: platform_message.MessageChain
@@ -40,20 +43,25 @@ class GewechatMessageConverter(adapter.MessageConverter):
             elif isinstance(component, platform_message.Plain):
                 content_list.append({"type": "text", "content": component.text})
             elif isinstance(component, platform_message.Image):
-                # content_list.append({"type": "image", "image_id": component.image_id})
-                pass
+                if not component.url:
+                    pass
+                content_list.append({"type": "image", "image": component.url})
+
+
+            elif isinstance(component, platform_message.Voice):
+                content_list.append({"type": "voice", "url": component.url, "length": component.length})
             elif isinstance(component, platform_message.Forward):
                 for node in component.node_list:
                     content_list.extend(await GewechatMessageConverter.yiri2target(node.message_chain))
 
         return content_list
 
-    @staticmethod
     async def target2yiri(
+        self,
         message: dict,
         bot_account_id: str
     ) -> platform_message.MessageChain:
-        
+
         if message["Data"]["MsgType"] == 1:
             # 检查消息开头，如果有 wxid_sbitaz0mt65n22:\n 则删掉
             regex = re.compile(r"^wxid_.*:")
@@ -74,25 +82,77 @@ class GewechatMessageConverter(adapter.MessageConverter):
             return platform_message.MessageChain(content_list)
                     
         elif message["Data"]["MsgType"] == 3:
-            image_base64 = message["Data"]["ImgBuf"]["buffer"]
+            image_xml = message["Data"]["Content"]["string"]
+            if not image_xml:
+                return platform_message.MessageChain([
+                    platform_message.Plain(text="[图片内容为空]")
+                ])
+
+
+            try:
+                base64_str, image_format = await image.get_gewechat_image_base64(
+                    gewechat_url=self.config["gewechat_url"],
+                    gewechat_file_url=self.config["gewechat_file_url"],
+                    app_id=self.config["app_id"],
+                    xml_content=image_xml,
+                    token=self.config["token"],
+                    image_type=2,
+                )
+
+                return platform_message.MessageChain([
+                    platform_message.Image(
+                        base64=f"data:image/{image_format};base64,{base64_str}"
+                    )
+                ])
+            except Exception as e:
+                print(f"处理图片消息失败: {str(e)}")
+                return platform_message.MessageChain([
+                    platform_message.Plain(text=f"[图片处理失败]")
+                ])
+        elif message["Data"]["MsgType"] == 34:
+            audio_base64 = message["Data"]["ImgBuf"]["buffer"]
             return platform_message.MessageChain(
-                [platform_message.Image(base64=f"data:image/jpeg;base64,{image_base64}")]
+                [platform_message.Voice(base64=f"data:audio/silk;base64,{audio_base64}")]
             )
+        elif message["Data"]["MsgType"] == 49:
+            # 支持微信聊天记录的消息类型，将 XML 内容转换为 MessageChain 传递
+            try:
+                content = message["Data"]["Content"]["string"]
+
+                try:
+                    content_bytes = content.encode('utf-8')
+                    decoded_content = base64.b64decode(content_bytes)
+                    return platform_message.MessageChain(
+                        [platform_message.Unknown(content=decoded_content)]
+                    )
+                except Exception as e:
+                    return platform_message.MessageChain(
+                        [platform_message.Plain(text=content)]
+                    )
+            except Exception as e:
+                print(f"Error processing type 49 message: {str(e)}")
+                return platform_message.MessageChain(
+                    [platform_message.Plain(text="[无法解析的消息]")]
+                )
 
 class GewechatEventConverter(adapter.EventConverter):
-    
+
+    def __init__(self, config: dict):
+        self.config = config
+        self.message_converter = GewechatMessageConverter(config)
+
     @staticmethod
     async def yiri2target(
         event: platform_events.MessageEvent
     ) -> dict:
         pass
 
-    @staticmethod
     async def target2yiri(
+        self,
         event: dict,
         bot_account_id: str
     ) -> platform_events.MessageEvent:
-        message_chain = await GewechatMessageConverter.target2yiri(copy.deepcopy(event), bot_account_id)
+        message_chain = await self.message_converter.target2yiri(copy.deepcopy(event), bot_account_id)
 
         if not message_chain:
             return None
@@ -120,7 +180,7 @@ class GewechatEventConverter(adapter.EventConverter):
                 time=event["Data"]["CreateTime"],
                 source_platform_object=event,
             )
-        elif 'wxid_' in event["Data"]["FromUserName"]["string"]:
+        else:
             return platform_events.FriendMessage(
                 sender=platform_entities.Friend(
                     id=event["Data"]["FromUserName"]["string"],
@@ -133,9 +193,10 @@ class GewechatEventConverter(adapter.EventConverter):
             )
 
 
-@adapter.adapter_class("gewechat")
-class GewechatMessageSourceAdapter(adapter.MessageSourceAdapter):
-    
+class GeWeChatAdapter(adapter.MessagePlatformAdapter):
+
+    name: str = "gewechat"  # 定义适配器名称
+
     bot: gewechat_client.GewechatClient
     quart_app: quart.Quart
 
@@ -145,12 +206,12 @@ class GewechatMessageSourceAdapter(adapter.MessageSourceAdapter):
 
     ap: app.Application
 
-    message_converter: GewechatMessageConverter = GewechatMessageConverter()
-    event_converter: GewechatEventConverter = GewechatEventConverter()
+    message_converter: GewechatMessageConverter
+    event_converter: GewechatEventConverter
 
     listeners: typing.Dict[
         typing.Type[platform_events.Event],
-        typing.Callable[[platform_events.Event, adapter.MessageSourceAdapter], None],
+        typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ] = {}
     
     def __init__(self, config: dict, ap: app.Application):
@@ -158,6 +219,9 @@ class GewechatMessageSourceAdapter(adapter.MessageSourceAdapter):
         self.ap = ap
 
         self.quart_app = quart.Quart(__name__)
+
+        self.message_converter = GewechatMessageConverter(config)
+        self.event_converter = GewechatEventConverter(config)
 
         @self.quart_app.route('/gewechat/callback', methods=['POST'])
         async def gewechat_callback():
@@ -184,7 +248,19 @@ class GewechatMessageSourceAdapter(adapter.MessageSourceAdapter):
         target_id: str,
         message: platform_message.MessageChain
     ):
-        pass
+        geweap_msg = await GewechatMessageConverter.yiri2target(message)
+        # 此处加上群消息at处理
+        # ats = [item["target"] for item in geweap_msg if item["type"] == "at"]
+
+        for msg in geweap_msg:
+            if msg['type'] == 'text':
+                await self.bot.post_text(app_id=self.config['app_id'], to_wxid=target_id, content=msg['content'])
+
+            elif msg['type'] == 'image':
+
+                await self.bot.post_image(app_id=self.config['app_id'], to_wxid=target_id, img_url=msg["image"])
+
+
 
     async def reply_message(
         self,
@@ -222,14 +298,14 @@ class GewechatMessageSourceAdapter(adapter.MessageSourceAdapter):
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[[platform_events.Event, adapter.MessageSourceAdapter], None]
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None]
     ):
         self.listeners[event_type] = callback
 
     def unregister_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[[platform_events.Event, adapter.MessageSourceAdapter], None]
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None]
     ):
         pass
 
@@ -258,7 +334,7 @@ class GewechatMessageSourceAdapter(adapter.MessageSourceAdapter):
 
         self.ap.logger.info(f"Gewechat 登录成功，app_id: {app_id}")
 
-        await self.ap.platform_mgr.write_back_config(self, self.config)
+        await self.ap.platform_mgr.write_back_config('gewechat', self, self.config)
 
         # 获取 nickname
         profile = self.bot.get_profile(self.config["app_id"])

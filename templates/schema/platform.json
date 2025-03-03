@@ -252,6 +252,21 @@
                                 "type": "string",
                                 "default": "",
                                 "description": "飞书的bot_name"
+                            },
+                            "enable-webhook": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否启用webhook模式"
+                            },
+                            "port": {
+                                "type": "integer",
+                                "description": "设置监听的端口,开启callback event时需要设置",
+                                "default": 2285
+                            },
+                            "encrypt-key": {
+                                "type": "string",
+                                "default": "",
+                                "description": "设置加密密钥"
                             }
                         }
                     },
@@ -309,6 +324,11 @@
                                 "type": "string",
                                 "default": "",
                                 "description": "gewechat 的 url"
+                            },
+                            "gewechat_file_url": {
+                                "type": "string",
+                                "default": "",
+                                "description": "gewechat 文件下载URL"
                             },
                             "port": {
                                 "type": "integer",
@@ -374,6 +394,67 @@
                                 "type": "integer",
                                 "default": 2287,
                                 "description": "监听的端口"
+                            }
+                        }
+                    },
+                    {
+                        "title": "钉钉适配器",
+                        "description": "用于接入钉钉",
+                        "properties": {
+                            "adapter": {
+                                "type": "string",
+                                "const": "dingtalk"
+                            },
+                            "enable": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否启用此适配器",
+                                "layout": {
+                                    "comp": "switch",
+                                    "props": {
+                                        "color": "primary"
+                                    }
+                                }
+                            },
+                            "client_id": {
+                                "type": "string",
+                                "default": "",
+                                "description": "钉钉的client_id"
+                            },
+                            "client_secret": {
+                                "type": "string",
+                                "default": "",
+                                "description": "钉钉的client_secret"
+                            },
+                            "robot_code": {
+                                "type": "string",
+                                "default": "",
+                                "description": "钉钉的robot_code"
+                            },
+                            "robot_name": {
+                                "type": "string",
+                                "default": "",
+                                "description": "钉钉的robot_name"
+                            }
+                        }
+                    },
+                    {
+                        "title": "Telegram 适配器",
+                        "description": "用于接入 Telegram",
+                        "properties": {
+                            "adapter": {
+                                "type": "string",
+                                "const": "telegram"
+                            },
+                            "enable": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否启用此适配器"
+                            },
+                            "token": {
+                                "type": "string",
+                                "default": "",
+                                "description": "Telegram 的 token"
                             }
                         }
                     }
