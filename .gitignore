@@ -19,7 +19,7 @@ cookies.json
 data/labels/announcement_saved.json
 cmdpriv.json
 tips.py
-.venv
+venv*
 bin/
 .vscode
 test_*
@@ -29,6 +29,7 @@ qcapi
 claude.json
 bard.json
 /*yaml
+!.pre-commit-config.yaml
 !components.yaml
 !/docker-compose.yaml
 data/labels/instance_id.json
@@ -38,4 +39,5 @@ botpy.log*
 /poc
 /libs/wecom_api/test.py
 /venv
-/jp-tyo-churros-05.rockchin.top
+test.py
+/web_ui

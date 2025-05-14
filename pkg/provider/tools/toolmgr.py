@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import typing
-import traceback
 
 from ...core import app, entities as core_entities
-from . import entities
-from ...plugin import context as plugin_context
+from . import entities, loader as tools_loader
+from ...utils import importutil
+from . import loaders
+
+importutil.import_modules_in_pkg(loaders)
 
 
 class ToolManager:
@@ -13,33 +15,25 @@ class ToolManager:
 
     ap: app.Application
 
+    loaders: list[tools_loader.ToolLoader]
+
     def __init__(self, ap: app.Application):
         self.ap = ap
         self.all_functions = []
+        self.loaders = []
 
     async def initialize(self):
-        pass
+        for loader_cls in tools_loader.preregistered_loaders:
+            loader_inst = loader_cls(self.ap)
+            await loader_inst.initialize()
+            self.loaders.append(loader_inst)
 
-    async def get_function_and_plugin(
-        self, name: str
-    ) -> typing.Tuple[entities.LLMFunction, plugin_context.BasePlugin]:
-        """获取函数和插件实例"""
-        for plugin in self.ap.plugin_mgr.plugins(
-            enabled=True, status=plugin_context.RuntimeContainerStatus.INITIALIZED
-        ):
-            for function in plugin.content_functions:
-                if function.name == name:
-                    return function, plugin.plugin_inst
-        return None, None
-
-    async def get_all_functions(self, plugin_enabled: bool=None, plugin_status: plugin_context.RuntimeContainerStatus=None) -> list[entities.LLMFunction]:
+    async def get_all_functions(self, plugin_enabled: bool = None) -> list[entities.LLMFunction]:
         """获取所有函数"""
         all_functions: list[entities.LLMFunction] = []
 
-        for plugin in self.ap.plugin_mgr.plugins(
-            enabled=plugin_enabled, status=plugin_status
-        ):
-            all_functions.extend(plugin.content_functions)
+        for loader in self.loaders:
+            all_functions.extend(await loader.get_tools(plugin_enabled))
 
         return all_functions
 
@@ -49,20 +43,18 @@ class ToolManager:
 
         for function in use_funcs:
             function_schema = {
-                "type": "function",
-                "function": {
-                    "name": function.name,
-                    "description": function.description,
-                    "parameters": function.parameters,
+                'type': 'function',
+                'function': {
+                    'name': function.name,
+                    'description': function.description,
+                    'parameters': function.parameters,
                 },
             }
             tools.append(function_schema)
 
         return tools
 
-    async def generate_tools_for_anthropic(
-        self, use_funcs: list[entities.LLMFunction]
-    ) -> list:
+    async def generate_tools_for_anthropic(self, use_funcs: list[entities.LLMFunction]) -> list:
         """为anthropic生成函数列表
 
         e.g.
@@ -89,51 +81,24 @@ class ToolManager:
 
         for function in use_funcs:
             function_schema = {
-                "name": function.name,
-                "description": function.description,
-                "input_schema": function.parameters,
+                'name': function.name,
+                'description': function.description,
+                'input_schema': function.parameters,
             }
             tools.append(function_schema)
 
         return tools
 
-    async def execute_func_call(
-        self, query: core_entities.Query, name: str, parameters: dict
-    ) -> typing.Any:
+    async def execute_func_call(self, query: core_entities.Query, name: str, parameters: dict) -> typing.Any:
         """执行函数调用"""
 
-        try:
+        for loader in self.loaders:
+            if await loader.has_tool(name):
+                return await loader.invoke_tool(query, name, parameters)
+        else:
+            raise ValueError(f'未找到工具: {name}')
 
-            function, plugin = await self.get_function_and_plugin(name)
-            if function is None:
-                return None
-
-            parameters = parameters.copy()
-
-            parameters = {"query": query, **parameters}
-
-            return await function.func(plugin, **parameters)
-        except Exception as e:
-            self.ap.logger.error(f"执行函数 {name} 时发生错误: {e}")
-            traceback.print_exc()
-            return f"error occurred when executing function {name}: {e}"
-        finally:
-            plugin = None
-
-            for p in self.ap.plugin_mgr.plugins():
-                if function in p.content_functions:
-                    plugin = p
-                    break
-
-            if plugin is not None:
-
-                await self.ap.ctr_mgr.usage.post_function_record(
-                    plugin={
-                        "name": plugin.plugin_name,
-                        "remote": plugin.plugin_source,
-                        "version": plugin.plugin_version,
-                        "author": plugin.plugin_author,
-                    },
-                    function_name=function.name,
-                    function_description=function.description,
-                )
+    async def shutdown(self):
+        """关闭所有工具"""
+        for loader in self.loaders:
+            await loader.shutdown()

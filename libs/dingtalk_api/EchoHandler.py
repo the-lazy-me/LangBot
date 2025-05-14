@@ -1,7 +1,7 @@
 import asyncio
-import json
 import dingtalk_stream
 from dingtalk_stream import AckMessage
+
 
 class EchoTextHandler(dingtalk_stream.ChatbotHandler):
     def __init__(self, client):
@@ -10,6 +10,7 @@ class EchoTextHandler(dingtalk_stream.ChatbotHandler):
         self.client = client  # 用于更新 DingTalkClient 中的 incoming_message
 
     """处理钉钉消息"""
+
     async def process(self, callback: dingtalk_stream.CallbackMessage):
         incoming_message = dingtalk_stream.ChatbotMessage.from_dict(callback.data)
         if incoming_message.message_id != self.msg_id:
@@ -23,8 +24,11 @@ class EchoTextHandler(dingtalk_stream.ChatbotHandler):
         """异步等待消息的到来"""
         while self.incoming_message is None:
             await asyncio.sleep(0.1)  # 异步等待，避免阻塞
+
         return self.incoming_message
+
 
 async def get_dingtalk_client(client_id, client_secret):
     from api import DingTalkClient  # 延迟导入，避免循环导入
+
     return DingTalkClient(client_id, client_secret)
